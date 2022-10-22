@@ -1,10 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_hw/model/Profile.dart';
-import 'package:flutter_hw/widget/ItemProfile.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
-import '../helper/Router.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_hw/bloc/counter_bloc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,73 +13,65 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          textTheme: GoogleFonts.latoTextTheme(
-            Theme.of(context).textTheme,
-          ),
-        ),
-        debugShowCheckedModeBanner: false,
-        routerDelegate: router.routerDelegate,
-        routeInformationParser: router.routeInformationParser,
-        routeInformationProvider: router.routeInformationProvider);
+    return MaterialApp(
+      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
   }
 }
 
-class HomePage extends StatefulWidget {
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  final String title;
+
   @override
-  State<StatefulWidget> createState() => _HomePage();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _HomePage extends State<HomePage> {
-  int counter = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    counter = 10;
-  }
+class _MyHomePageState extends State<MyHomePage> {
+  StreamController<int> controller = StreamController();
 
   @override
   Widget build(BuildContext context) {
-    final profiles = [
-      Profile(name: "Crocodic Studio", role: "Android Engineer"),
-      Profile(name: "Crocodic Studio 2", role: "iOS Engineer"),
-      Profile(name: "Crocodic Studio 3", role: "Web Engineer"),
-      Profile(name: "Crocodic Studio 4", role: "Marketing")
-    ];
-
-    return Scaffold(
-        // appBar: AppBar(
-        //   title: const Text(
-        //     "Week 1",
-        //     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        //   ),
-        //   actions: const [
-        //     Padding(padding: EdgeInsets.all(16), child: Icon(Icons.notifications)),
-        //   ],
-        // ),
-        body: Container(
-            color: Colors.green[50],
-            child: ListView.builder(
-              itemCount: profiles.length,
-              itemBuilder: (BuildContext context, int index) => ItemProfile(
-                  data: profiles[index],
-                  onClick: (data) =>
-                      // Navigator.of(context, rootNavigator: true).push(MaterialPageRoute(builder: (builder) => DetailProfile(data: data))),
-                      context.push('/detail', extra: data)),
-              padding: const EdgeInsets.all(8),
-            )),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            setState(() {
-              counter += 1;
-            });
+    return BlocProvider(
+      create: (context) => CounterBloc(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Text(
+                'You have pushed the button this many times:',
+              ),
+              BlocBuilder<CounterBloc, CounterState>(
+                builder: (context, state) {
+                  return Text(
+                    state is CurrentCounter ? state.counter.toString() : '0',
+                    style: Theme.of(context).textTheme.headline4,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: BlocBuilder<CounterBloc, CounterState>(
+          builder: (context, state) {
+            return FloatingActionButton(
+              onPressed: () => {BlocProvider.of<CounterBloc>(context).add(IncrementEvent(2))},
+              tooltip: 'Increment',
+              child: const Icon(Icons.add),
+            );
           },
-          backgroundColor: Colors.red,
-          child: const Icon(Icons.add),
-        ));
+        ),
+      ),
+    );
   }
 }
